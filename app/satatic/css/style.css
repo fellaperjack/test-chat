@@ -1,0 +1,28 @@
+body { font-family: sans-serif; margin: 20px; }
+nav a { margin-right: 15px; }
+.content { margin-top: 20px; }
+#messages-container {
+    border: 1px solid #ccc;
+    height: 400px;
+    overflow-y: scroll;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+.message {
+    margin-bottom: 10px;
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+}
+.message strong { color: #007bff; }
+.message .timestamp { font-size: 0.8em; color: #888; }
+.message-body { margin: 5px 0; }
+.edited-tag { font-size: 0.7em; color: #999; font-style: italic; }
+.message-controls button {
+    font-size: 0.7em;
+    padding: 2px 5px;
+    margin-right: 5px;
+    cursor: pointer;
+}
+#message-form { display: flex; }
+#message-input { flex-grow: 1; padding: 8px; }
+

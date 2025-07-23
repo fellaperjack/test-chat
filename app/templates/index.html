@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Chat App</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; }
+        header { background: #333; color: white; padding: 10px; text-align: center; }
+        #messages { list-style-type: none; margin: 0; padding: 10px; overflow-y: scroll; flex-grow: 1; border: 1px solid #ccc; }
+        .message { margin-bottom: 10px; display: flex; }
+        .avatar { border-radius: 50%; margin-right: 10px; width: 40px; height: 40px; }
+        .message-content { max-width: 80%; }
+        .message-author { font-weight: bold; }
+        .timestamp { font-size: 0.8em; color: #777; margin-left: 10px; }
+        #form { display: flex; padding: 10px; border-top: 1px solid #ccc; }
+        #input { border: 1px solid #ddd; padding: 10px; flex-grow: 1; margin-right: 10px; }
+        button { background: #007bff; color: white; border: none; padding: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome, {{ current_user.username }}!</h1>
+        <a href="{{ url_for('main.logout') }}" style="color: white;">Logout</a>
+    </header>
+
+    <ul id="messages">
+        <!-- Messages from the server will be loaded here -->
+        {% for message in messages %}
+            {% include '_message.html' %}
+        {% endfor %}
+    </ul>
+
+    <!-- This form's submission will be handled by JavaScript -->
+    <form id="form">
+        <input id="input" autocomplete="off" placeholder="Type a message..." /><button>Send</button>
+    </form>
+
+    <!-- Import the Socket.IO client library -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const socket = io();
+            const form = document.getElementById('form');
+            const input = document.getElementById('input');
+            const messages = document.getElementById('messages');
+
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const msg_body = input.value.trim();
+                if (msg_body) {
+                    socket.emit('new_message', { 'body': msg_body });
+                    input.value = '';
+                }
+            });
+
+            socket.on('message_broadcast', (data) => {
+                messages.innerHTML += data.html;
+                messages.scrollTop = messages.scrollHeight;
+            });
+
+
+
+messages.addEventListener('click', (event) => {
+                const target = event.target;
+                
+                // --- Handle Edit Button Click ---
+                if (target.matches('.edit-btn')) {
+                    const messageId = target.dataset.id;
+                    const messageBodyElement = document.querySelector(`#message-${messageId} .message-body`);
+                    const currentBody = messageBodyElement.innerText;
+                    
+                    const newBody = prompt("Edit your message:", currentBody);
+
+                    // If the user didn't cancel and the message is different
+                    if (newBody && newBody.trim() !== currentBody) {
+                        socket.emit('edit_message', { 'id': messageId, 'new_body': newBody.trim() });
+                    }
+                }
+
+                // --- Handle Delete Button Click ---
+                if (target.matches('.delete-btn')) {
+                    const messageId = target.dataset.id;
+
+                    if (confirm("Are you sure you want to delete this message?")) {
+                        socket.emit('delete_message', { 'id': messageId });
+                    }
+                }
+            });
+
+
+            socket.on('message_edited', (data) => {
+                const messageBodyElement = document.querySelector(`#message-${data.id} .message-body`);
+                const messageTimestampElement = document.querySelector(`#message-${data.id} .timestamp`);
+                if (messageBodyElement) {
+                    messageBodyElement.innerText = data.new_body;
+                    // Add an (edited) tag if it's not there
+                    if (!messageTimestampElement.innerText.includes('(edited)')) {
+                         messageTimestampElement.innerText += ' (edited)';
+                    }
+                }
+            });
+
+            socket.on('message_deleted', (data) => {
+                const messageElement = document.getElementById(`message-${data.id}`);
+                if (messageElement) {
+                    messageElement.remove();
+                }
+            });
+
+            // Optional: Handle connection confirmation
+            socket.on('connection_response', (data) => {
+                console.log(data.message);
+            });
+        });
+    </script>
+</body>
+</html>

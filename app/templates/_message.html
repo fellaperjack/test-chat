@@ -1,0 +1,17 @@
+<div class="message" id="message-{{ message.id }}">
+    <img src="http://www.gravatar.com/avatar/{{ message.author.email_hash }}?d=identicon&s=40" class="avatar">
+    <div class="message-content">
+        <div class="message-header">
+            <strong>{{ message.author.username }}</strong>
+            <span class="timestamp">{{ message.timestamp.strftime('%b %d, %H:%M') }} {% if message.edited %}(edited){% endif %}</span>
+            
+            {% if message.author == current_user %}
+            <div class="message-actions">
+                <button class="edit-btn" data-id="{{ message.id }}">Edit</button>
+                <button class="delete-btn" data-id="{{ message.id }}">Delete</button>
+            </div>
+            {% endif %}
+        </div>
+        <div class="message-body">{{ message.body }}</div>
+    </div>
+</div>
